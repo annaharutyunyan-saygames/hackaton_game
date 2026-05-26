@@ -282,6 +282,66 @@ html, body {
   animation: win-pulse 600ms ease;
 }
 
+.cell.wall {
+  background: rgba(31, 27, 22, 0.18);
+  border: 1px solid rgba(31, 27, 22, 0.3);
+  cursor: not-allowed;
+  animation: none;
+}
+
+.cell.wall::before,
+.cell.wall::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 3px,
+    rgba(31, 27, 22, 0.22) 3px,
+    rgba(31, 27, 22, 0.22) 5px
+  );
+  pointer-events: none;
+}
+
+.cell.wall::after { display: none; }
+
+.cell.wall:hover {
+  background: rgba(31, 27, 22, 0.18);
+}
+
+.cell.anchor {
+  background: var(--alive);
+  border: 2px solid #C99A3A;
+  animation: none;
+  cursor: not-allowed;
+}
+
+.cell.anchor::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 215, 130, 0.7);
+  pointer-events: none;
+  animation: anchor-glow 2.6s ease-in-out infinite;
+}
+
+@keyframes anchor-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+
+.cell.wildcard {
+  border: 1px dotted rgba(107, 95, 78, 0.45);
+  border-style: dotted;
+}
+
+.cell.wildcard:hover:not(.alive):not(:disabled) {
+  background: rgba(217, 165, 127, 0.1);
+}
+
 .cell.alive {
   background: var(--alive);
   border: none;
@@ -536,6 +596,16 @@ html, body {
   font-size: 13.5px;
   line-height: 1.5;
   color: var(--ink);
+}
+
+.rule-card .rule-subtitle {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 14px;
+  margin: 14px 0 6px;
+  color: var(--ink);
+  font-variation-settings: "opsz" 24;
 }
 
 .rule-card .rule-list {

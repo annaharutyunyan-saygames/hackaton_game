@@ -173,9 +173,12 @@
   function loadLevel(id) {
     const lvl = getLevel(id);
     if (!lvl) return;
+    const parsed = parseLevel(lvl.start);
     state.view = 'level';
     state.levelId = id;
-    state.current = parseGrid(lvl.start);
+    state.current = parsed.current;
+    state.walls = parsed.walls;
+    state.anchors = parsed.anchors;
     state.seedsLeft = lvl.seeds;
     state.ticksLeft = lvl.maxTicks;
     state.history = [];
@@ -195,7 +198,7 @@
 
   function scheduleEndCheck() {
     const lvl = getLevel(state.levelId);
-    const won = isWin(state.current, lvl.goal);
+    const won = isWin(state.current, lvl.goal, state.walls);
     const lost = !won && state.seedsLeft === 0 && state.ticksLeft === 0;
     if (!won && !lost) return;
     const stamp = ++state.pendingEndAt;
@@ -203,7 +206,7 @@
       if (stamp !== state.pendingEndAt) return;
       if (state.view !== 'level') return;
       const lvl2 = getLevel(state.levelId);
-      if (isWin(state.current, lvl2.goal)) {
+      if (isWin(state.current, lvl2.goal, state.walls)) {
         state.view = 'win';
         state.solvedLevels.add(state.levelId);
         persistSolved();
@@ -219,6 +222,8 @@
   function placeSeed(x, y) {
     if (state.view !== 'level') return;
     if (state.seedsLeft <= 0) return;
+    if (state.walls && state.walls[y][x]) return;
+    if (state.anchors && state.anchors[y][x]) return;
     if (state.current[y][x] === 1) return;
     pushSnapshot();
     state.current[y][x] = 1;
@@ -234,7 +239,7 @@
     if (state.ticksLeft <= 0) return;
     pushSnapshot();
     const prev = state.current;
-    state.current = step(state.current);
+    state.current = step(state.current, state.walls, state.anchors);
     state.ticksLeft -= 1;
     const delta = computeDelta(prev, state.current);
     setDelta({ action: 'tick', ...delta });
@@ -445,7 +450,7 @@
   }
 
   function renderStatus(lvl) {
-    const won = isWin(state.current, lvl.goal);
+    const won = isWin(state.current, lvl.goal, state.walls);
     const lost = !won && state.seedsLeft === 0 && state.ticksLeft === 0;
     let text = '';
     let tone = 'neutral';
@@ -479,6 +484,12 @@
         el('li', {}, 'Пустая клетка с 2 живыми соседями — оживает'),
         el('li', {}, 'Живая клетка с 2 живыми соседями — остаётся живой'),
         el('li', {}, 'У клетки 0, 1, 3 и более соседей — пустеет (умирает)')
+      ]),
+      el('h4', { class: 'rule-subtitle' }, 'Особые клетки'),
+      el('ul', { class: 'rule-list' }, [
+        el('li', {}, 'Стена (серая с штриховкой) — нельзя посадить, не считается соседом, всегда пустая'),
+        el('li', {}, 'Якорь (золотистая) — всегда живая, считается соседом, не умирает'),
+        el('li', {}, 'Точечная цель — вольная клетка: подходит любое состояние')
       ])
     ]);
   }
@@ -617,34 +628,46 @@
     const isJustDied = (x, y) => showDelta && state.lastDelta.diedCells.some(c => c[0] === x && c[1] === y);
     const showLose = state.view === 'lose';
     const showWin = state.view === 'win';
+    const walls = state.walls;
+    const anchors = state.anchors;
     for (let y = 0; y < 5; y++) {
       for (let x = 0; x < 5; x++) {
+        const isWall = walls && walls[y][x] === 1;
+        const isAnchor = anchors && anchors[y][x] === 1;
         const alive = state.current[y][x] === 1;
-        const isTarget = lvl.goal[y][x] === 'X';
+        const goalChar = lvl.goal[y][x];
+        const isTarget = goalChar === 'X' || goalChar === 'A';
+        const isWildcard = goalChar === '?';
+        const isCounted = !isWall && !isWildcard && goalChar !== '#';
         const classes = ['cell'];
-        if (alive) classes.push('alive');
-        if (isTarget) classes.push('target');
-        if (alive && !isTarget) classes.push('off-target');
-        if (!alive && isJustDied(x, y)) classes.push('just-died');
-        if (showLose && alive && !isTarget) classes.push('lose-extra');
-        if (showLose && !alive && isTarget) classes.push('lose-missing');
-        if (showWin && alive) classes.push('win-pulse');
+        if (isWall) classes.push('wall');
+        else if (isAnchor) classes.push('anchor', 'alive');
+        else if (alive) classes.push('alive');
+        if (isTarget && !isWall) classes.push('target');
+        if (isWildcard) classes.push('wildcard');
+        if (alive && isCounted && !isTarget && !isAnchor) classes.push('off-target');
+        if (!alive && !isWall && isJustDied(x, y)) classes.push('just-died');
+        if (showLose && isCounted) {
+          if (alive && !isTarget && !isAnchor) classes.push('lose-extra');
+          if (!alive && isTarget) classes.push('lose-missing');
+        }
+        if (showWin && alive && !isAnchor) classes.push('win-pulse');
 
-        const aliveStr = alive ? 'alive' : 'empty';
-        const targetStr = isTarget ? ', part of target' : '';
+        const role = isWall ? 'стена' : isAnchor ? 'якорь' : (alive ? 'живая' : 'пустая');
+        const targetStr = isTarget ? ', цель' : (isWildcard ? ', любое' : '');
         const attrs = {
           class: classes.join(' '),
-          'aria-label': `Cell row ${y + 1} column ${x + 1}, ${aliveStr}${targetStr}`,
+          'aria-label': `Клетка ряд ${y + 1} столбец ${x + 1}, ${role}${targetStr}`,
           'data-x': x,
           'data-y': y
         };
-        if (alive) {
+        if (isWall || isAnchor || alive) {
           attrs.disabled = true;
         } else {
           const cx = x, cy = y;
           attrs.onclick = () => placeSeed(cx, cy);
         }
-        if (showWin && alive) {
+        if (showWin && alive && !isAnchor) {
           attrs.style = `animation-delay: ${y * 40}ms`;
         }
         grid.appendChild(el('button', attrs));
@@ -671,12 +694,15 @@
     ]);
   }
 
-  function countMismatches(current, goal) {
+  function countMismatches(current, goal, walls) {
     let extra = 0;
     let missing = 0;
     for (let y = 0; y < 5; y++) {
       for (let x = 0; x < 5; x++) {
-        const target = goal[y][x] === 'X' ? 1 : 0;
+        if (walls && walls[y][x]) continue;
+        const c = goal[y][x];
+        if (c === '?' || c === '#') continue;
+        const target = (c === 'X' || c === 'A') ? 1 : 0;
         if (current[y][x] === 1 && target === 0) extra++;
         else if (current[y][x] === 0 && target === 1) missing++;
       }
@@ -685,7 +711,7 @@
   }
 
   function renderLosePanel(lvl) {
-    const { extra, missing } = countMismatches(state.current, lvl.goal);
+    const { extra, missing } = countMismatches(state.current, lvl.goal, state.walls);
     const parts = [];
     if (extra > 0 && missing > 0) {
       parts.push(`Лишних живых клеток: ${extra}, недостающих: ${missing}.`);
