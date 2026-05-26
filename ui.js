@@ -130,8 +130,43 @@
     showRule: false,
     lastDelta: null,
     deltaConsumed: true,
-    pendingEndAt: 0
+    pendingEndAt: 0,
+    solving: false
   };
+
+  const SOLUTIONS = {
+    1:  ['place(2,2)','place(3,2)'],
+    2:  ['place(2,1)','place(1,2)','place(3,2)'],
+    3:  ['place(1,1)','place(3,1)','place(1,3)','place(3,3)'],
+    4:  ['place(2,1)','place(2,3)','tick'],
+    5:  ['place(2,0)','tick'],
+    6:  ['tick'],
+    7:  ['place(2,1)','place(2,2)','tick'],
+    8:  ['place(2,1)','place(2,3)','tick','tick'],
+    9:  ['place(2,0)','place(2,2)','tick','tick'],
+    10: ['tick','tick'],
+    11: ['place(2,1)','place(2,3)','tick','tick','tick'],
+    12: ['place(2,0)','place(2,1)','tick','tick','tick'],
+    13: ['place(1,2)','place(2,2)','tick','tick','tick','tick'],
+    14: ['place(2,1)','place(2,2)','tick','tick','tick','tick'],
+    15: ['place(1,2)','place(3,2)'],
+    16: ['place(2,1)','place(2,3)','tick'],
+    17: ['place(2,1)','place(2,3)','tick','tick'],
+    18: ['place(2,1)','place(2,2)','tick'],
+    19: ['place(0,2)','place(4,2)','tick'],
+    20: ['place(2,1)','place(2,2)','tick','tick','tick','tick'],
+    21: ['place(2,1)','place(2,3)','tick'],
+    22: ['place(1,1)','place(2,1)','place(1,2)','place(2,2)','tick'],
+    23: ['place(2,1)','place(2,2)','place(2,3)','tick'],
+    24: ['place(2,0)','place(2,1)','place(2,2)','place(2,3)','tick'],
+    25: ['place(2,0)','place(0,2)','place(4,2)','place(2,4)','tick'],
+    26: ['place(2,1)','place(2,3)','tick','place(1,3)','place(3,3)'],
+    27: ['place(2,1)','place(2,3)','tick','place(2,0)','tick'],
+    28: ['place(2,1)','place(2,3)','tick','place(0,2)','place(4,2)','tick']
+  };
+
+  const SOLVE_DELAY_MS = 650;
+  let solveToken = 0;
 
   const END_DELAY_MS = 1100;
 
@@ -262,7 +297,39 @@
   }
 
   function restart() {
+    state.solving = false;
+    solveToken++;
     loadLevel(state.levelId);
+  }
+
+  function solve() {
+    if (state.view !== 'level' && state.view !== 'lose' && state.view !== 'win') return;
+    const sol = SOLUTIONS[state.levelId];
+    if (!sol) return;
+    solveToken++;
+    const myToken = solveToken;
+    loadLevel(state.levelId);
+    state.solving = true;
+    render();
+    const actions = sol.slice();
+    const stepFn = () => {
+      if (myToken !== solveToken) return;
+      if (state.view !== 'level') return;
+      if (actions.length === 0) {
+        state.solving = false;
+        render();
+        return;
+      }
+      const a = actions.shift();
+      if (a === 'tick') {
+        runTick();
+      } else {
+        const m = a.match(/place\((\d+),(\d+)\)/);
+        if (m) placeSeed(+m[1], +m[2]);
+      }
+      setTimeout(stepFn, SOLVE_DELAY_MS);
+    };
+    setTimeout(stepFn, 350);
   }
 
   function goToMenu() {
@@ -605,18 +672,24 @@
         el('button', {
           class: 'btn-secondary',
           onclick: undo,
-          disabled: state.history.length === 0 ? true : false
+          disabled: state.history.length === 0 || state.solving ? true : false
         }, 'Undo'),
         el('button', {
           class: 'btn-primary',
           onclick: runTick,
-          disabled: state.ticksLeft <= 0 ? true : false
+          disabled: state.ticksLeft <= 0 || state.solving ? true : false
         }, 'Tick')
       ]));
     }
 
     screen.appendChild(el('div', { class: 'restart-row' }, [
-      el('button', { class: 'btn-secondary', onclick: restart }, 'Restart')
+      el('button', { class: 'btn-secondary', onclick: restart }, 'Restart'),
+      el('button', {
+        class: 'btn-secondary solve-btn',
+        onclick: solve,
+        disabled: !SOLUTIONS[state.levelId] || state.solving ? true : false,
+        title: 'Показать готовое решение'
+      }, state.solving ? '⋯ Решаю' : '💡 Решить')
     ]));
 
     return screen;
@@ -661,7 +734,7 @@
           'data-x': x,
           'data-y': y
         };
-        if (isWall || isAnchor || alive) {
+        if (isWall || isAnchor || alive || state.solving) {
           attrs.disabled = true;
         } else {
           const cx = x, cy = y;
