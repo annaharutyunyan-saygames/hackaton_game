@@ -3,7 +3,7 @@
   const TUTORIAL_KEY = 'mr_tutorial_seen';
   const CONCEPTS_KEY = 'mr_concepts_seen';
   const LEVELS_VERSION_KEY = 'mr_levels_version';
-  const CURRENT_LEVELS_VERSION = '2';
+  const CURRENT_LEVELS_VERSION = '3';
 
   if (localStorage.getItem(LEVELS_VERSION_KEY) !== CURRENT_LEVELS_VERSION) {
     localStorage.removeItem(SOLVED_KEY);
@@ -169,28 +169,26 @@
 
   const SOLUTIONS = {
     1:  ['place(2,1)','place(2,3)','tick'],
-    2:  ['tick'],
-    3:  ['place(2,0)','tick'],
-    4:  ['place(2,1)','place(2,2)','tick'],
+    2:  ['place(1,2)','place(3,2)'],
+    3:  ['place(2,1)','place(2,2)','tick'],
+    4:  ['place(2,1)','place(2,3)','tick'],
     5:  ['place(2,1)','place(2,3)','tick','tick'],
-    6:  ['place(1,2)','place(3,2)'],
-    7:  ['place(2,1)','place(2,3)','tick'],
-    8:  ['place(2,1)','place(2,3)','tick','tick'],
-    9:  ['place(2,1)','place(2,2)','tick'],
-    10: ['place(0,2)','place(4,2)','tick'],
-    11: ['place(2,1)','place(2,3)','tick'],
-    12: ['place(2,1)','place(2,3)','tick','tick','tick'],
-    13: ['place(2,0)','place(2,1)','tick','tick','tick'],
+    6:  ['place(2,1)','place(2,3)','tick','tick'],
+    7:  ['place(2,1)','place(2,2)','tick'],
+    8:  ['place(0,2)','place(4,2)','tick'],
+    9:  ['place(2,0)','place(2,1)','tick','tick','tick'],
+    10: ['place(2,1)','place(2,3)','tick'],
+    11: ['place(2,1)','place(2,3)','tick','tick','tick'],
+    12: ['place(2,1)','place(2,2)','tick','tick','tick','tick'],
+    13: ['place(2,1)','place(2,2)','place(2,3)','tick'],
     14: ['place(1,2)','place(2,2)','tick','tick','tick','tick'],
-    15: ['place(2,1)','place(2,2)','tick','tick','tick','tick'],
+    15: ['place(2,1)','place(2,3)','tick','place(2,0)','tick'],
     16: ['place(2,1)','place(2,2)','tick','tick','tick','tick'],
-    17: ['place(2,1)','place(2,2)','place(2,3)','tick'],
-    18: ['place(1,1)','place(2,1)','place(1,2)','place(2,2)','tick'],
-    19: ['place(2,0)','place(2,1)','place(2,2)','place(2,3)','tick'],
-    20: ['place(2,0)','place(0,2)','place(4,2)','place(2,4)','tick'],
-    21: ['place(2,1)','place(2,3)','tick','place(1,3)','place(3,3)'],
-    22: ['place(2,1)','place(2,3)','tick','place(2,0)','tick'],
-    23: ['place(2,1)','place(2,3)','tick','place(0,2)','place(4,2)','tick']
+    17: ['place(1,1)','place(2,1)','place(1,2)','place(2,2)','tick'],
+    18: ['place(2,1)','place(2,3)','tick','place(1,3)','place(3,3)'],
+    19: ['place(2,0)','place(0,2)','place(4,2)','place(2,4)','tick'],
+    20: ['place(2,0)','place(2,1)','place(2,2)','place(2,3)','tick'],
+    21: ['place(2,1)','place(2,3)','tick','place(0,2)','place(4,2)','tick']
   };
 
   const SOLVE_DELAY_MS = 650;
