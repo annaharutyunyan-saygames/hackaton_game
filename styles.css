@@ -146,6 +146,34 @@ html, body {
   font-variation-settings: "opsz" 24;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rule-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(107, 95, 78, 0.3);
+  background: transparent;
+  color: var(--ink-soft);
+  font: 600 15px/1 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+
+.rule-toggle:hover {
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+.rule-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .level-title {
   font-family: 'Fraunces', serif;
   font-weight: 500;
@@ -180,6 +208,7 @@ html, body {
 }
 
 .cell {
+  position: relative;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -191,6 +220,22 @@ html, body {
     background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
     border-color 280ms ease,
     transform 200ms ease;
+}
+
+.cell.just-died::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--alive);
+  animation: wilt 520ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes wilt {
+  0%   { transform: scale(1);    opacity: 1; }
+  60%  { transform: scale(0.6);  opacity: 0.45; }
+  100% { transform: scale(0.25); opacity: 0; }
 }
 
 .cell.alive {
@@ -244,6 +289,26 @@ html, body {
 
 .counters .label {
   color: var(--ink-soft);
+}
+
+.status {
+  min-height: 22px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  text-align: center;
+  margin: -8px 0 18px;
+  color: var(--ink-soft);
+  transition: color 200ms ease;
+}
+
+.status-good {
+  color: var(--alive);
+  font-weight: 500;
+}
+
+.status-bad {
+  color: var(--error);
+  font-weight: 500;
 }
 
 .actions {
@@ -336,8 +401,16 @@ html, body {
   font-family: 'Fraunces', serif;
   font-weight: 600;
   font-size: 28px;
-  margin: 0 0 24px;
+  margin: 0 0 12px;
   font-variation-settings: "opsz" 24;
+}
+
+.overlay-text {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-align: center;
 }
 
 .overlay-actions {
@@ -345,6 +418,67 @@ html, body {
   flex-direction: column;
   gap: 12px;
   align-items: center;
+}
+
+.rule-card {
+  width: 100%;
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 32px;
+  text-align: left;
+}
+
+.rule-card .rule-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 18px;
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-variation-settings: "opsz" 24;
+}
+
+.rule-card .rule-lead {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.rule-card .rule-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.rule-card .rule-list li {
+  margin-bottom: 4px;
+}
+
+.rule-card .rule-list li:last-child {
+  margin-bottom: 0;
+}
+
+.rule-modal {
+  max-width: 360px;
+  text-align: left;
+}
+
+.rule-modal h2 {
+  text-align: center;
+}
+
+.rule-modal .rule-card {
+  margin-bottom: 20px;
+  background: transparent;
+  padding: 0;
+}
+
+.rule-modal .rule-card .rule-title {
+  display: none;
 }
 
 @keyframes bloom {
