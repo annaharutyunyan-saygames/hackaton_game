@@ -691,10 +691,7 @@
 
   function renderMenu() {
     const screen = el('div', { class: 'screen menu' });
-    screen.appendChild(el('h1', {}, [
-      'Chain Reaction',
-      el('div', {}, 'Garden')
-    ]));
+    screen.appendChild(el('h1', {}, 'Garden of Life'));
 
     const firstUnsolved = LEVELS.find(l => !state.solvedLevels.has(l.id));
     const nextToPlay = firstUnsolved ? firstUnsolved.id : 1;
